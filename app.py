@@ -3,12 +3,12 @@ import os
 from modelscope.hub.snapshot_download import snapshot_download
 
 # 创建保存模型目录
-os.system("mkdir -p /root/models")
+os.system("mkdir -p /home/xlab-app-center/models")
 
 # save_dir是模型保存到本地的目录
-save_dir="/root/models"
+save_dir="/home/xlab-app-center/models"
 
-snapshot_download('JimmyMa99/BaJie-Chat-mini', 
+snapshot_download('foxmail/internlm2-1_8b-xtuner', 
                   cache_dir=save_dir)
 
 # isort: skip_file
@@ -178,10 +178,10 @@ def on_btn_click():
 
 @st.cache_resource
 def load_model():
-    model = (AutoModelForCausalLM.from_pretrained('/root/models/JimmyMa99/BaJie-Chat-mini',
+    model = (AutoModelForCausalLM.from_pretrained('/home/xlab-app-center/models/foxmail/internlm2-1_8b-xtuner',
                                                   trust_remote_code=True).to(
                                                       torch.bfloat16).cuda())
-    tokenizer = AutoTokenizer.from_pretrained('/root/models/JimmyMa99/BaJie-Chat-mini',
+    tokenizer = AutoTokenizer.from_pretrained('/home/xlab-app-center/models/foxmail/internlm2-1_8b-xtuner',
                                               trust_remote_code=True)
     return model, tokenizer
 
