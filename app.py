@@ -62,7 +62,7 @@ def generate_interactive(
     input_ids = inputs['input_ids']
     _, input_ids_seq_length = input_ids.shape[0], input_ids.shape[-1]
     if generation_config is None:
-        generation_config = model.generation_config
+        generation_config = model.generation_configmod
     generation_config = copy.deepcopy(generation_config)
     model_kwargs = generation_config.update(**kwargs)
     bos_token_id, eos_token_id = (  # noqa: F841  # pylint: disable=W0612
@@ -180,10 +180,10 @@ def on_btn_click():
 
 @st.cache_resource
 def load_model():
-    model = (AutoModelForCausalLM.from_pretrained('internlm/internlm2-chat-7b',
+    model = (AutoModelForCausalLM.from_pretrained('internlm/internlm2-chat-1_8b',
                                                   trust_remote_code=True).to(
                                                       torch.bfloat16).cuda())
-    tokenizer = AutoTokenizer.from_pretrained('internlm/internlm2-chat-7b',
+    tokenizer = AutoTokenizer.from_pretrained('internlm/internlm2-chat-1_8b',
                                               trust_remote_code=True)
     return model, tokenizer
 
@@ -239,7 +239,7 @@ def main():
     user_avator = 'assets/user.png'
     robot_avator = 'assets/robot.png'
 
-    st.title('InternLM2-Chat-7B')
+    st.title('InternLM2-Chat-1_8B')
 
     generation_config = prepare_generation_config()
 
