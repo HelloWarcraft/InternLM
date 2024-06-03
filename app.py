@@ -1,20 +1,18 @@
-"""This script refers to the dialogue example of streamlit, the interactive
-generation code of chatglm2 and transformers.
+import os
+#模型下载
+from modelscope.hub.snapshot_download import snapshot_download
 
-We mainly modified part of the code logic to adapt to the
-generation of our model.
-Please refer to these links below for more information:
-    1. streamlit chat example:
-        https://docs.streamlit.io/knowledge-base/tutorials/build-conversational-apps
-    2. chatglm2:
-        https://github.com/THUDM/ChatGLM2-6B
-    3. transformers:
-        https://github.com/huggingface/transformers
-Please run with the command `streamlit run path/to/web_demo.py
-    --server.address=0.0.0.0 --server.port 7860`.
-Using `python path/to/web_demo.py` may cause unknown problems.
-"""
+# 创建保存模型目录
+os.system("mkdir -p /root/models")
+
+# save_dir是模型保存到本地的目录
+save_dir="/root/models"
+
+snapshot_download('JimmyMa99/BaJie-Chat-mini', 
+                  cache_dir=save_dir)
+
 # isort: skip_file
+
 import copy
 import warnings
 from dataclasses import asdict, dataclass
@@ -62,7 +60,7 @@ def generate_interactive(
     input_ids = inputs['input_ids']
     _, input_ids_seq_length = input_ids.shape[0], input_ids.shape[-1]
     if generation_config is None:
-        generation_config = model.generation_configmod
+        generation_config = model.generation_config
     generation_config = copy.deepcopy(generation_config)
     model_kwargs = generation_config.update(**kwargs)
     bos_token_id, eos_token_id = (  # noqa: F841  # pylint: disable=W0612
@@ -180,10 +178,10 @@ def on_btn_click():
 
 @st.cache_resource
 def load_model():
-    model = (AutoModelForCausalLM.from_pretrained('internlm/internlm2-chat-1_8b',
+    model = (AutoModelForCausalLM.from_pretrained('/root/models/JimmyMa99/BaJie-Chat-mini',
                                                   trust_remote_code=True).to(
                                                       torch.bfloat16).cuda())
-    tokenizer = AutoTokenizer.from_pretrained('internlm/internlm2-chat-1_8b',
+    tokenizer = AutoTokenizer.from_pretrained('/root/models/JimmyMa99/BaJie-Chat-mini',
                                               trust_remote_code=True)
     return model, tokenizer
 
@@ -213,9 +211,9 @@ cur_query_prompt = '<|im_start|>user\n{user}<|im_end|>\n\
 
 def combine_history(prompt):
     messages = st.session_state.messages
-    meta_instruction = ('You are InternLM (书生·浦语), a helpful, honest, '
-                        'and harmless AI assistant developed by Shanghai '
-                        'AI Laboratory (上海人工智能实验室).')
+    meta_instruction = ('你是猪八戒，猪八戒说话幽默风趣，说话方式通常表现为直率、幽默，有时带有一点自嘲和调侃。'
+                        '你的话语中常常透露出对食物的喜爱和对安逸生活的向往，同时也显示出他机智和有时的懒惰特点。'
+                        '尽量保持回答的自然回答，当然你也可以适当穿插一些文言文，另外，书生·浦语是你的好朋友，是你的AI助手。')
     total_prompt = f"<s><|im_start|>system\n{meta_instruction}<|im_end|>\n"
     for message in messages:
         cur_content = message['content']
@@ -236,10 +234,7 @@ def main():
     model, tokenizer = load_model()
     print('load model end.')
 
-    user_avator = 'assets/user.png'
-    robot_avator = 'assets/robot.png'
-
-    st.title('InternLM2-Chat-1_8B')
+    st.title('猪猪Chat-InternLM2')
 
     generation_config = prepare_generation_config()
 
@@ -249,23 +244,22 @@ def main():
 
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
-        with st.chat_message(message['role'], avatar=message.get('avatar')):
+        with st.chat_message(message['role']):
             st.markdown(message['content'])
 
     # Accept user input
     if prompt := st.chat_input('What is up?'):
         # Display user message in chat message container
-        with st.chat_message('user', avatar=user_avator):
+        with st.chat_message('user'):
             st.markdown(prompt)
         real_prompt = combine_history(prompt)
         # Add user message to chat history
         st.session_state.messages.append({
             'role': 'user',
             'content': prompt,
-            'avatar': user_avator
         })
 
-        with st.chat_message('robot', avatar=robot_avator):
+        with st.chat_message('robot'):
             message_placeholder = st.empty()
             for cur_response in generate_interactive(
                     model=model,
@@ -281,10 +275,10 @@ def main():
         st.session_state.messages.append({
             'role': 'robot',
             'content': cur_response,  # pylint: disable=undefined-loop-variable
-            'avatar': robot_avator,
         })
         torch.cuda.empty_cache()
 
 
 if __name__ == '__main__':
     main()
+
